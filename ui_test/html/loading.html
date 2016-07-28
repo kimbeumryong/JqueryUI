@@ -13,14 +13,16 @@
 	
 	$(document).ready(function(){
 		
-		$("#joContents").easyOverlay("start");
+		$("#joContents").qspin({
+			spinnerImage : '../img/circle-loading-animation.gif',
+			background : 'rgba(255,255,255,1)'
+		});
 	});
-	
-	
 </script>
 </head>
 <body>
 <div id="joContents"  style="width:450px">
+	<!-- <img src="../img/circle-loading-animation.gif" /> -->
 </div>
 </body>
 </html>

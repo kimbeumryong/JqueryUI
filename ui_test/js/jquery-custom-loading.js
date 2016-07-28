@@ -1,121 +1,113 @@
-/**
- *  jQuery 커스텀
- *  
- *  1. jQuery loading
- *  -> How to use it
- *  --> $(selector).easyOverlay("start");	<-- 시작
- *      $(selector).easyOverlay("stop");	<-- 종료
- *  	$(selector).easyOverlay("start",{
- *  		zindex : value,					<-- zIndex값 
- *  		spin : booleanValue,			<-- 회전 여부 
- *  		speed : value					<-- 속도 (밀리세컨드)
- *  	});
- */
+(function ($) {
+    var self = {};
+    
+    // Sets the debugmode - if true, you will see errors in the console log
+    self.handleDebugMode = function (pParams) {
+        // Set debugmode
+        self.debug = false;
+        if (typeof pParams !== 'undefined' && typeof pParams.debug !== 'undefined' && $.type(pParams.debug) === "boolean")
+            self.debug = pParams.debug;
 
-/* 1. jQuery loading
-JQuery Easy Overlay v2.0.0
+        // If no debugmode, hide errors
+        if (!self.debug)
+            console.error = function () { };
+    };
 
-Copyright 2015 Nazzareno Mazzitello, Andrés Cabrera and Contributors
+    // Adds the spinner to any jquery Element
+    $.fn.qspin = function (pParams) {
+        // Set default options
+        pParamList = {
+            task: 'add',
+            targetElement: $(this),
+            background: 'transparent',
+            spinnerImage: ""
+        }
+        // Override with userspecified parameters
+        $.extend(pParamList, pParams);
+        
+        // If we just need to remove the spinner, we remove it and exit
+        if (pParamList.task === 'rem')
+        {
+            $(this).find('.qspinner').remove();
+            return;
+        }
+        
+        if(pParams.spinnerImage === ''){
+            if(!self.debug)
+            console.error("Missing image: option.task");
+        }
 
-This file is part of jQuery Easy Overlay.
+        // If we do not have any target to attach to, we have nothing to do here
+        if (pParamList.targetElement === null) {
+            if (self.debug)
+                console.error("No target specified - paramlist: ", pParamList);
 
-jQuery Easy Overlay is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+            return;
+        }
+        
+        // Check whether we can work with the target elements css position attr
+        var lTargetElPos = pParamList.targetElement.css('position').toLowerCase();
+        if (lTargetElPos !== 'relative' && lTargetElPos !== 'absolute') {
+            if (self.debug) {
+                console.error("Position of the targetElement has to be relative or positive. Currently is: ", lTargetElPos);
+                console.error("Setting it to relative, if visual errors occure, adjust the target.");
+            }
 
-jQuery Easy Overlay is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
+            pParamList.targetElement.css('position', 'relative');
+        }
 
-You should have received a copy of the GNU Lesser General Public License
-along with jQuery Easy Overlay.  If not, see <http://www.gnu.org/licenses/>.
-*/
-(function( $ ){
-    $.fn.easyOverlay = function (action, options) {
+        // The callbackfunction for imageanalyze func
+        var lAnalyzeImagePromise = function (pImageRatio) {
+            // Check if the image is valid
+            if (typeof pImageRatio === 'undefined' || pImageRatio.x == 0 || pImageRatio.y == 0) {
+                if (self.debug)
+                    console.error("Faulty image: ", pImageRatio);
 
-        var defaults = {
-            zindex: "99999",
-            spin: true,
-            speed: 400
+                return;
+            }
+
+            // Create a random selector for the new spinner
+            var lRandomSelector = Math.floor((Math.random() * 10000) + 1000);
+
+            // Create and set new spinner
+            pParamList.targetElement.append('<div class="qspinner qspinner-' + lRandomSelector + '"></div>');
+            var lNewSpinner = $('.qspinner-' + lRandomSelector);
+            lNewSpinner.css('position', 'absolute');
+            lNewSpinner.css('background', pParamList.background);
+            lNewSpinner.css('top', '0');
+            lNewSpinner.css('left', '0');
+            lNewSpinner.css('bottom', '0');
+            lNewSpinner.css('right', '0');
+
+            // Now add the inner spinner image
+            lNewSpinner.append('<img></img>');
+            var lNewInnerSpinner = lNewSpinner.children('img');
+
+            lNewInnerSpinner.prop('src', pParamList.spinnerImage);
+            lNewInnerSpinner.css('position', 'absolute');
+            lNewInnerSpinner.css('margin-left', -Math.abs(pImageRatio.x / 2));
+            lNewInnerSpinner.css('left', '50%');
+            lNewInnerSpinner.css('margin-top', -Math.abs(pImageRatio.y / 2));
+            lNewInnerSpinner.css('top', '50%');
+            // Return the spinner so the user can do whatever with it
+            return $('.qspinner-' + lRandomSelector);
         };
 
-        var _options = $.extend({}, defaults, options || {});
+        // Check whether the image is valid
+        self.analyzeImage(pParamList.spinnerImage, lAnalyzeImagePromise);
+    };
 
-		switch (action) {
-			case 'start':
-				{
-					var $this = $(this);
-		
-					if($this.length <= 0) return;
-					
-					// Calculating OVERLAY DIV z-index
-					var overlayZIndex;
-					var targetZIndex = $this.css('z-index');
-					if (targetZIndex == "auto")
-					    overlayZIndex = _options.zindex;
-					else 
-						overlayZIndex = parseFloat(targetZIndex) + 1;
-					
-					// Putting and Styling OVERLAY DIV if doesn't exist
-					if( !$("#jqueryEasyOverlayDiv").length ) {
-					    var innerDiv = document.createElement('div');
-					    if (_options.spin) {
-					        $(innerDiv)
-							.css({ position: "absolute" })
-							.attr("id", "jqueryOverlayLoad")
-					        .html("<i class='fa fa-spin fa-spinner fa-2x'></i>&nbsp;");
-					    } else {
-					        $(innerDiv)
-							.css({ position: "absolute" })
-							.attr("id", "jqueryOverlayLoad");
-					    }
-						
-						
-						var containerDiv = document.createElement('div');	
-						$(containerDiv)
-							.css({
-								display: "none",
-								position: "absolute",
-								background: "#fff"
-							})
-							.attr('id',"jqueryEasyOverlayDiv")
-							.append(innerDiv);
-						
-						$("body").append(containerDiv);
-					}
-					
-					// Restoring some CSS of OVERLAY DIV after every 'overlayout' because jquery.fadeOut method take off it
-					$("#jqueryEasyOverlayDiv").css({
-						opacity : 0.5,
-						zIndex  : overlayZIndex,
-						top     :  $this.offset().top,
-						left    : $this.offset().left,
-						width   : $this.outerWidth(),
-						height  : $this.outerHeight()
-					});
-					
-					// Calculating Spinner Div positioning
-					var topOverlay = (($this.height()/2)-12);
-					var leftOverlay = (($this.width()/2)-12);
-					if(topOverlay < 0) topOverlay = 0;
-					$("#jqueryOverlayLoad").css({
-						top  : topOverlay,
-						left : leftOverlay
-					});
-					
-					// Show OVERLAY DIV
-					$("#jqueryEasyOverlayDiv").fadeIn(_options.speed);
-				}
-				break;
-			case 'stop':
-				{
-					if( $("#jqueryEasyOverlayDiv").length ) $("#jqueryEasyOverlayDiv").fadeOut(_options.speed);
-				}
-				break;
-		}
-    	
-		return this;
-   	}; 
-})(jQuery);
+    // Analyzes the image that will be used for the spinner
+    self.analyzeImage = function (pImageSource, pCallbackFunc) {
+        lImage = new Image();
+        lImage.src = pImageSource;
+
+        // We have to do it like this because we cannot fetch the imageratio if it hasnt been loaded, default will be 0, 0
+        lImage.onload = function () {
+            pCallbackFunc({
+                x: lImage.width,
+                y: lImage.height
+            });
+        }
+    };
+} (jQuery));

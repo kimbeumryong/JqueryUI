@@ -26,7 +26,7 @@
 
 	<script type="text/javascript">
 
-	// TOGGLER CUSTOMIZATION SETTINGS
+	// 토글 버튼 커스텀 세팅
 	var 
 		westDefaultSize		= 320
 	,	toggleButtons		= '<div class="btnToggler"></div>'
@@ -50,9 +50,9 @@
 		,	west__closable:					true			// 닫히게 가능 여부
 		//  상단판 세팅
 		,	north__paneSelector:			"#north"		// div 아이디 or 클래스
-		,	north__size:					130				// 시작 시 상단판 사이즈
-		,	north__minSize:					130				// 최소 사이즈
-		,	north__maxSize:					130				// 최대 사이즈
+		,	north__size:					150				// 시작 시 상단판 사이즈
+		,	north__minSize:					150				// 최소 사이즈
+		,	north__maxSize:					150				// 최대 사이즈
 		,	north__togglerLength_open:		80				// 토글 버튼 사이즈 (열림)
 		,	north__togglerLength_closed:	80				// 토글 버튼 사이즈 (닫힘)
 		//  우측판 세팅
@@ -60,6 +60,7 @@
 		,	east__closable:					true			// 닫히게 가능 여부
 		,	east__size:						0				// 기본 사이즈
 		,	east__togglerLength_closed:		70				// 토글 버튼 사이즈 (닫힘)
+		,	east__onhide_start:				"aaa"
 		//  중앙판 세팅
 		,	center__paneSelector:			"#center"		// div 아이디 or 클래스
 		// 기타
@@ -71,8 +72,10 @@
 		// 오버플로우 적용 
 		myLayout.allowOverflow("center");
 		
-		// east는 기본으로 숨김
-		myLayout.hide("east");
+		// west는 기본으로 숨김
+		myLayout.hide("west");
+		// east는 닫힘 상태로 시작
+		myLayout.close("east");
 
 		// 토글 버튼 객체
 		var $westToggler = myLayout.togglers.west;
@@ -89,6 +92,10 @@
 		// 오른쪽 버튼 클릭 이벤트 변경
 		$eastToggler.click( toggleEast );
 	});
+	
+	function aaa(pane, $Pane, state, options) {
+		alert("###");
+	}
 
 	// 좌측 토글 버튼 (위)
 	function toggleWest(evt) {
@@ -100,12 +107,16 @@
 		myLayout.hide("west");
 		myLayout.show("east");
 		myLayout.close("east");
+		myLayout.panes.center.data("paneSelector","#center2");
 		evt.stopPropagation();
 	}
 	// 우측 토글 버튼
 	function toggleEast(evt) {
 		myLayout.hide("east");
 		myLayout.show("west");
+		//myLayout.options.center.paneSelector = "#center";
+		//myLayout.panes.center.data("paneSelector","#center");
+		
 		evt.stopPropagation();
 	}
 	
@@ -121,6 +132,8 @@
 		<div id="north">North
 		</div>
 		<div id="east">
+		</div>
+		<div id="south">Center2
 		</div>
 	</div>
 </body>
